@@ -1,0 +1,31 @@
+# PDF翻訳(pdf2zh)のGUIをDockerで動かす。
+#   docker compose up -d  →  http://127.0.0.1:7860
+# 【要変更】OLLAMA_HOST（翻訳サーバーのアドレス）・OLLAMA_MODEL
+# 【注意】pdf2zh のGUIに認証はありません。社外に開く場合は必ず前段で認証を掛けてください
+#         （templates/nginx-pdf2zh.conf）
+services:
+  pdf2zh:
+    image: byaidu/pdf2zh:latest
+    container_name: pdf2zh
+    # 127.0.0.1 に縛る。社内に開くときだけリバースプロキシ経由にする
+    ports:
+      - "127.0.0.1:7860:7860"
+    environment:
+      # ローカルLLMで翻訳する場合（推奨）。文書は社外に出ません
+      - OLLAMA_HOST=http://192.168.0.10:11434
+      - OLLAMA_MODEL=gemma3:12b
+      # クラウドAPIを使う場合はここに。値は .env から読ませ、この行に直接書かない
+      # - DEEPL_AUTH_KEY=${DEEPL_AUTH_KEY}
+      # - OPENAI_BASE_URL=${OPENAI_BASE_URL}
+      # - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      # 翻訳するPDFの置き場と出力先
+      - ./input:/app/input
+      - ./output:/app/output
+      # モデルと日本語フォントのキャッシュ。消すと毎回1GB近く再取得します
+      - pdf2zh_cache:/root/.cache
+    restart: unless-stopped
+
+volumes:
+  pdf2zh_cache:
+    driver: local

@@ -1,0 +1,20 @@
+# PDF翻訳(pdf2zh)のGUIを社内向けに常駐させる
+# 置き場所: ~/.config/systemd/user/pdf2zh.service
+#   systemctl --user daemon-reload && systemctl --user enable --now pdf2zh
+# 【要変更】WorkingDirectory・ExecStart のパス、EnvironmentFile
+[Unit]
+Description=PDF Translation (pdf2zh) Web UI
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/pdf2zh
+# 翻訳エンジンの設定はここに書く（OLLAMA_HOST, OLLAMA_MODEL, 各種APIキー）
+# ユニットファイルに直接書かない
+EnvironmentFile=/opt/pdf2zh/.env
+ExecStart=/opt/pdf2zh/.venv/bin/pdf2zh -i
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
